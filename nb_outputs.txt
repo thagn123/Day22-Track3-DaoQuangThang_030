@@ -1,0 +1,532 @@
+﻿Total cells: 142
+================================================================================
+
+--- Cell 2 (code) ---
+SOURCE: # Set tier early ΓÇö every downstream cell reads this. | import os | os.environ["COMPUTE_TIER"] = "T4" | print(f"COMPUTE_TIER se
+OUTPUTS (1):
+  [stream] COMPUTE_TIER set to T4
+
+
+--- Cell 3 (code) ---
+SOURCE: # Re-install required packages if they were lost during runtime restart | !pip install -q "unsloth[colab-new] @ git+https:
+OUTPUTS (1):
+  [stream]   Installing build dependencies ... [?25l[?25hdone
+  Getting requirements to build wheel ... [?25l[?25hdone
+  Preparing metadata (pyproject.toml) ... [?25l[?25hdone
+[2K   [90mΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü[0m [32m60.7/60.7 MB[0m [31m12.7 MB/s[0m eta [36m0:00:00[0m
+[2K   [90mΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü[0m [32m506.8/506.8 kB[0m [31m19.7 MB/s[0m eta [36m0:00:00[0m
+[2K   [90mΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü[0m [32m10.2/10.2 MB[0m [31m95.6 
+
+--- Cell 4 (code) ---
+SOURCE: # Probe GPU | import torch | assert torch.cuda.is_available(), "Enable GPU runtime: Runtime ΓåÆ Change runtime type ΓåÆ GPU" | gpu
+OUTPUTS (1):
+  [stream] GPU: Tesla T4  (15.6 GB)
+
+
+--- Cell 5 (code) ---
+SOURCE: # Set up working directory matching the repo layout ΓÇö Colab runs from /content | from pathlib import Path | WORK = Path("/co
+OUTPUTS (1):
+  [stream] Working dir: /content/lab22/notebooks
+
+
+--- Cell 10 (code) ---
+SOURCE: import os | from pathlib import Path |  | # Tier detection. Defaults to T4 if env not set. | COMPUTE_TIER = os.environ.get("COMP
+OUTPUTS (1):
+  [stream] COMPUTE_TIER:    T4
+BASE_MODEL:      unsloth/Qwen2.5-3B-bnb-4bit
+SFT_DATASET:     5CD-AI/Vietnamese-alpaca-cleaned  (slice: 1000)
+max_seq_length:  512
+effective batch: 8
+output:          /content/lab22/adapters/sft-mini
+
+
+--- Cell 11 (code) ---
+SOURCE: import torch |  | assert torch.cuda.is_available(), "DPO needs a CUDA GPU. See HARDWARE-GUIDE.md." | gpu = torch.cuda.get_devi
+OUTPUTS (1):
+  [stream] GPU: Tesla T4  (15.6 GB)
+
+
+--- Cell 13 (code) ---
+SOURCE: from unsloth import FastLanguageModel |  | model, tokenizer = FastLanguageModel.from_pretrained( |     model_name=BASE_MODEL, | 
+OUTPUTS (12):
+  [stream] ≡ƒªÑ Unsloth: Will patch your computer to enable 2x faster free finetuning.
+≡ƒªÑ Unsloth Zoo will now patch everything to make training faster!
+==((====))==  Unsloth 2026.5.2: Fast Qwen2 patching. Transformers: 5.5.0.
+   \\   /|    Tesla T4. Num GPUs = 1. Max memory: 14.563 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.10.0+cu128. CUDA: 7.5. CUDA Toolkit: 12.8. Triton: 3.6.0
+\        /    Bfloat16 = FALSE. FA [Xformers = 0.0.35. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unslot
+  [display_data] model.safetensors:   0%|          | 0.00/2.05G [00:00<?, ?B/s]
+  [display_data] Loading weights:   0%|          | 0/434 [00:00<?, ?it/s]
+  [display_data] generation_config.json:   0%|          | 0.00/171 [00:00<?, ?B/s]
+  [display_data] config.json: 0.00B [00:00, ?B/s]
+  [display_data] tokenizer_config.json: 0.00B [00:00, ?B/s]
+  [display_data] vocab.json: 0.00B [00:00, ?B/s]
+  [display_data] merges.txt: 0.00B [00:00, ?B/s]
+  [display_data] tokenizer.json:   0%|          | 0.00/11.4M [00:00<?, ?B/s]
+  [display_data] added_tokens.json:   0%|          | 0.00/605 [00:00<?, ?B/s]
+  [display_data] special_tokens_map.json:   0%|          | 0.00/617 [00:00<?, ?B/s]
+  [stream] unsloth/Qwen2.5-3B-bnb-4bit does not have a padding token! Will use pad_token = <|PAD_TOKEN|>.
+
+
+--- Cell 14 (code) ---
+SOURCE: model = FastLanguageModel.get_peft_model( |     model, |     r=16, |     lora_alpha=32, |     lora_dropout=0.0,           # Unsl
+OUTPUTS (2):
+  [stream] Unsloth 2026.5.2 patched 36 layers with 36 QKV layers, 36 O layers and 36 MLP layers.
+
+  [stream] Trainable params: 29,933,568
+
+
+--- Cell 16 (code) ---
+SOURCE: from datasets import load_dataset | import sys |  | # Thß╗¡ danh s├ích c├íc ─æ╞░ß╗¥ng dß║½n dataset | possible_datasets = [ |     "TiengAnh/
+OUTPUTS (1):
+  [stream] ─Éang thß╗¡ tß║úi dataset: TiengAnh/Vietnamese-alpaca-cleaned...
+Kh├┤ng thß╗â tß║úi TiengAnh/Vietnamese-alpaca-cleaned: Dataset 'TiengAnh/Vietnamese-alpaca-cleaned' doesn't exist on the Hub or cannot be accessed.
+─Éang thß╗¡ tß║úi dataset: yahma/alpaca-cleaned...
+Th├ánh c├┤ng! ─É├ú tß║úi tß╗½: yahma/alpaca-cleaned
+Loaded 1000 rows. Columns: ['output', 'input', 'instruction']
+
+
+--- Cell 17 (code) ---
+SOURCE: # Alpaca ΓåÆ ChatML format (Qwen2.5's native template) | import sys |  | # Ensure ds is retrieved from the module scope | if 'ds' 
+OUTPUTS (3):
+  [stream] Manual ChatML template applied to tokenizer.
+
+  [display_data] Map:   0%|          | 0/1000 [00:00<?, ? examples/s]
+  [stream] 
+Sample formatted text (first 500 chars):
+<|im_start|>user
+Give three tips for staying healthy.<|im_end|>
+<|im_start|>assistant
+1. Eat a balanced and nutritious diet: Make sure your meals are inclusive of a variety of fruits and vegetables, lean protein, whole grains, and healthy fats. This helps to provide your body with the essential nutrients to function at its best and can help prevent chronic diseases.
+
+2. Engage in regular physical activity: Exercise is crucial for maintaining strong bones
+
+--- Cell 19 (code) ---
+SOURCE: from trl import SFTTrainer, SFTConfig | import torch |  | sft_config = SFTConfig( |     output_dir=str(ADAPTER_OUT.parent / "sft
+OUTPUTS (7):
+  [stream] warmup_ratio is deprecated and will be removed in v5.2. Use `warmup_steps` instead.
+
+  [display_data] Unsloth: Tokenizing ["text"] (num_proc=6):   0%|          | 0/1000 [00:00<?, ? examples/s]
+  [stream] The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'bos_token_id': None}.
+
+  [stream] ≡ƒªÑ Unsloth: Padding-free auto-enabled, enabling faster training.
+
+  [stream] ==((====))==  Unsloth - 2x faster free finetuning | Num GPUs used = 1
+   \\   /|    Num examples = 1,000 | Num Epochs = 1 | Total steps = 125
+O^O/ \_/ \    Batch size per device = 1 | Gradient accumulation steps = 8
+\        /    Data Parallel GPUs = 1 | Total batch size (1 x 8 x 1) = 8
+ "-____-"     Trainable parameters = 29,933,568 of 3,115,872,256 (0.96% trained)
+`use_return_dict` is deprecated! Use `return_dict` instead!
+
+  [display_data] <IPython.core.display.HTML object>
+  [stream] 
+Final train loss: 1.3316
+
+
+--- Cell 22 (code) ---
+SOURCE: import matplotlib.pyplot as plt |  | # Lß║Ñy dß╗» liß╗çu loss tß╗½ lß╗ïch sß╗¡ huß║Ñn luyß╗çn | losses = [log['loss'] for log in trainer.state
+OUTPUTS (2):
+  [stream] /tmp/ipykernel_1399/3971782643.py:13: UserWarning: Glyph 23 () missing from font(s) DejaVu Sans.
+  fig.tight_layout()
+/tmp/ipykernel_1399/3971782643.py:18: UserWarning: Glyph 23 () missing from font(s) DejaVu Sans.
+  fig.savefig(screenshot_dir / '02-sft-loss.png', dpi=120)
+/usr/local/lib/python3.12/dist-packages/IPython/core/pylabtools.py:151: UserWarning: Glyph 23 () missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+
+  [display_data] <Figure size 800x400 with 1 Axes>
+  [display_data] <IMAGE/PNG present>
+
+--- Cell 24 (code) ---
+SOURCE: trainer.model.save_pretrained(str(ADAPTER_OUT)) | tokenizer.save_pretrained(str(ADAPTER_OUT)) | print(f"Saved SFT adapter to
+OUTPUTS (2):
+  [stream] Unsloth: Restored added_tokens_decoder metadata in /content/lab22/adapters/sft-mini/tokenizer_config.json.
+
+  [stream] Saved SFT adapter to /content/lab22/adapters/sft-mini
+
+
+--- Cell 30 (code) ---
+SOURCE: import os | from pathlib import Path |  | COMPUTE_TIER = os.environ.get("COMPUTE_TIER", "T4").upper() |  | if COMPUTE_TIER == "T4"
+OUTPUTS (1):
+  [stream] Stage 2 Setup fixed. PREF_DATASET: argilla/ultrafeedback-binarized-preferences-cleaned
+
+
+--- Cell 32 (code) ---
+SOURCE: from transformers import AutoTokenizer |  | # Tß║úi tokenizer tß╗½ adapter SFT vß╗½a l╞░u | assert ADAPTER_DIR.exists(), f"NB1 must r
+OUTPUTS (1):
+  [ERROR] NameError: name 'ADAPTER_DIR' is not defined
+
+--- Cell 34 (code) ---
+SOURCE: from datasets import load_dataset |  | print(f"─Éang tß║úi {PREF_DATASET}...") | ds_pref = load_dataset(PREF_DATASET, split=f"tra
+OUTPUTS (5):
+  [stream] ─Éang tß║úi argilla/ultrafeedback-binarized-preferences-cleaned...
+
+  [display_data] README.md: 0.00B [00:00, ?B/s]
+  [display_data] data/train-00000-of-00001.parquet:   0%|          | 0.00/143M [00:00<?, ?B/s]
+  [display_data] Generating train split:   0%|          | 0/60917 [00:00<?, ? examples/s]
+  [stream] Th├ánh c├┤ng! ─É├ú tß║úi 2000 cß║╖p dß╗» liß╗çu preference.
+
+
+--- Cell 36 (code) ---
+SOURCE: def format_pref(row): |     prompt_msgs = [{"role": "user", "content": row["prompt"]}] |     prompt_text = tokenizer.apply_c
+OUTPUTS (2):
+  [display_data] Map:   0%|          | 0/2000 [00:00<?, ? examples/s]
+  [stream] Formatted: 2000 pairs. Columns: ['prompt', 'chosen', 'rejected']
+
+
+--- Cell 40 (code) ---
+SOURCE: import numpy as np |  | # Ph├ón t├¡ch ─æß╗Ö d├ái token ─æß╗â ─æß║úm bß║úo dß╗» liß╗çu nß║▒m trong giß╗¢i hß║ín MAX_LEN | prompt_lens = np.array([len(t
+OUTPUTS (1):
+  [stream] Prompt:   median=87  P95=312
+Chosen:   median=400  P95=811
+Rejected: median=278  P95=792
+
+44.2% of pairs fit in MAX_LEN=512
+ΓÜá Less than 80% fit. Consider increasing MAX_LEN or filtering long pairs.
+
+
+--- Cell 42 (code) ---
+SOURCE: # L╞░u dß╗» liß╗çu ─æ├ú xß╗¡ l├╜ v├áo th╞░ mß╗Ñc data/pref/ | pref.to_parquet(str(PREF_OUT / "train.parquet")) | print(f"Saved {len(pref)}
+OUTPUTS (4):
+  [display_data] Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]
+  [stream] Saved 2000 pairs to /content/lab22/data/pref/train.parquet
+
+  [display_data] Creating parquet from Arrow format:   0%|          | 0/1 [00:00<?, ?ba/s]
+  [stream] Saved 50 eval pairs to /content/lab22/data/pref/eval.parquet
+
+
+--- Cell 48 (code) ---
+SOURCE: import torch | from unsloth import FastLanguageModel | from peft import PeftModel |  | # 1. Load the Base Model | model, tokenizer
+OUTPUTS (4):
+  [stream] ==((====))==  Unsloth 2026.5.2: Fast Qwen2 patching. Transformers: 5.5.0.
+   \\   /|    Tesla T4. Num GPUs = 1. Max memory: 14.563 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.10.0+cu128. CUDA: 7.5. CUDA Toolkit: 12.8. Triton: 3.6.0
+\        /    Bfloat16 = FALSE. FA [Xformers = 0.0.35. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+
+  [display_data] Loading weights:   0%|          | 0/434 [00:00<?, ?it/s]
+  [stream] unsloth/Qwen2.5-3B-bnb-4bit does not have a padding token! Will use pad_token = <|PAD_TOKEN|>.
+
+  [ERROR] NameError: name 'SFT_PATH' is not defined
+
+--- Cell 50 (code) ---
+SOURCE: from unsloth import FastLanguageModel | from peft import PeftModel | import torch | from pathlib import Path |  | # Ensure paths a
+OUTPUTS (5):
+  [stream] ==((====))==  Unsloth 2026.5.2: Fast Qwen2 patching. Transformers: 5.5.0.
+   \\   /|    Tesla T4. Num GPUs = 1. Max memory: 14.563 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.10.0+cu128. CUDA: 7.5. CUDA Toolkit: 12.8. Triton: 3.6.0
+\        /    Bfloat16 = FALSE. FA [Xformers = 0.0.35. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+
+  [display_data] Loading weights:   0%|          | 0/434 [00:00<?, ?it/s]
+  [stream] unsloth/Qwen2.5-3B-bnb-4bit does not have a padding token! Will use pad_token = <|PAD_TOKEN|>.
+
+  [stream] Unsloth: Already have LoRA adapters! We shall skip this step.
+
+  [stream] Loaded SFT adapter from /content/lab22/adapters/sft-mini
+Policy model ready. Trainable DPO params: 29,933,568
+
+
+--- Cell 51 (code) ---
+SOURCE: from trl import DPOTrainer, DPOConfig | import pandas as pd | from datasets import Dataset | from pathlib import Path | import t
+OUTPUTS (12):
+  [display_data] Generating train split: 0 examples [00:00, ? examples/s]
+  [stream] warmup_ratio is deprecated and will be removed in v5.2. Use `warmup_steps` instead.
+
+  [stream] Loaded 2000 pairs from /content/lab22/data/pref/train.parquet
+
+  [display_data] Extracting prompt in train dataset (num_proc=5):   0%|          | 0/2000 [00:00<?, ? examples/s]
+  [display_data] Applying chat template to train dataset (num_proc=5):   0%|          | 0/2000 [00:00<?, ? examples/s]
+  [display_data] Tokenizing train dataset (num_proc=5):   0%|          | 0/2000 [00:00<?, ? examples/s]
+  [stream] The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'bos_token_id': None}.
+
+  [stream] Starting DPO Training...
+
+  [stream] ==((====))==  Unsloth - 2x faster free finetuning | Num GPUs used = 1
+   \\   /|    Num examples = 2,000 | Num Epochs = 1 | Total steps = 250
+O^O/ \_/ \    Batch size per device = 1 | Gradient accumulation steps = 8
+\        /    Data Parallel GPUs = 1 | Total batch size (1 x 8 x 1) = 8
+ "-____-"     Trainable parameters = 29,933,568 of 3,115,872,256 (0.96% trained)
+
+  [stream] Unsloth: Will smartly offload gradients to save VRAM!
+Unsloth: Double buffering enabled (parallel H2D + compute) for backward pass.
+
+  [display_data] <IPython.core.display.HTML object>
+  [stream] 
+Final DPO loss: 0.7221
+
+
+--- Cell 53 (code) ---
+SOURCE: from unsloth import FastLanguageModel | from peft import PeftModel |  | # Policy ΓÇö gets new DPO LoRA adapter on top of SFT LoR
+OUTPUTS (3):
+  [stream] ==((====))==  Unsloth 2026.5.2: Fast Qwen2 patching. Transformers: 5.5.0.
+   \\   /|    Tesla T4. Num GPUs = 1. Max memory: 14.563 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.10.0+cu128. CUDA: 7.5. CUDA Toolkit: 12.8. Triton: 3.6.0
+\        /    Bfloat16 = FALSE. FA [Xformers = 0.0.35. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+
+  [display_data] Loading weights:   0%|          | 0/434 [00:00<?, ?it/s]
+  [stream] unsloth/Qwen2.5-3B-bnb-4bit does not have a padding token! Will use pad_token = <|PAD_TOKEN|>.
+Policy: PeftModelForCausalLM with SFT adapter loaded
+
+
+--- Cell 54 (code) ---
+SOURCE: # Wrap policy with NEW LoRA adapter for DPO updates (don't merge SFT ΓÇö keep stacked) | # Unsloth re-applies LoRA on top of
+OUTPUTS (2):
+  [stream] Unsloth: Already have LoRA adapters! We shall skip this step.
+
+  [stream] Trainable params (DPO LoRA): 29,933,568
+
+
+--- Cell 57 (code) ---
+SOURCE: from trl import DPOConfig |  | dpo_config = DPOConfig( |     output_dir=str(DPO_OUT.parent / "dpo-checkpoints"), |     per_devic
+OUTPUTS (2):
+  [stream] warmup_ratio is deprecated and will be removed in v5.2. Use `warmup_steps` instead.
+
+  [stream] DPOConfig: beta=0.1  lr=5e-07  loss_type=sigmoid
+
+
+--- Cell 59 (code) ---
+SOURCE: from datasets import Dataset |  | pref_ds = Dataset.from_parquet(str(PREF_PATH)) | print(f"Loaded {len(pref_ds)} preference pa
+OUTPUTS (1):
+  [stream] Loaded 2000 preference pairs from /content/lab22/data/pref/train.parquet
+Columns: ['prompt', 'chosen', 'rejected']
+
+
+--- Cell 62 (code) ---
+SOURCE: train_result = trainer.train() | print(f"\nFinal DPO loss: {train_result.training_loss:.4f}")
+OUTPUTS (4):
+  [stream] The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'bos_token_id': None}.
+==((====))==  Unsloth - 2x faster free finetuning | Num GPUs used = 1
+   \\   /|    Num examples = 2,000 | Num Epochs = 1 | Total steps = 250
+O^O/ \_/ \    Batch size per device = 1 | Gradient accumulation steps = 8
+\        /    Data Parallel GPUs = 1 |
+  [stream] Unsloth: Will smartly offload gradients to save VRAM!
+Unsloth: Double buffering enabled (parallel H2D + compute) for backward pass.
+
+  [display_data] <IPython.core.display.HTML object>
+  [stream] 
+Final DPO loss: 0.7221
+
+
+--- Cell 64 (code) ---
+SOURCE: import matplotlib.pyplot as plt | import pandas as pd |  | logs = pd.DataFrame(trainer.state.log_history) | logs = logs[logs["lo
+OUTPUTS (1):
+  [display_data] <Figure size 1300x420 with 2 Axes>
+  [display_data] <IMAGE/PNG present>
+
+--- Cell 66 (code) ---
+SOURCE: if chosen_col and rejected_col and len(logs) >= 5: |     last_chosen = logs[chosen_col].iloc[-5:].mean() |     last_rejected
+OUTPUTS (1):
+  [stream] END  chosen reward:    -0.420
+END  rejected reward:  -0.655
+END  reward gap:       +0.235
+
+Γ£ô INTENDED: chosen reward UP and gap positive. Classic DPO success.
+
+
+--- Cell 68 (code) ---
+SOURCE: trainer.model.save_pretrained(str(DPO_OUT)) | tokenizer.save_pretrained(str(DPO_OUT)) | print(f"Saved DPO adapter to {DPO_OU
+OUTPUTS (2):
+  [stream] Unsloth: Restored added_tokens_decoder metadata in /content/lab22/adapters/dpo/tokenizer_config.json.
+
+  [stream] Saved DPO adapter to /content/lab22/adapters/dpo
+Wrote metrics to /content/lab22/adapters/dpo/dpo_metrics.json
+
+
+--- Cell 73 (code) ---
+SOURCE: import os | import json | from pathlib import Path |  | COMPUTE_TIER = os.environ.get("COMPUTE_TIER", "T4").upper() |  | if COMPUTE_
+OUTPUTS (1):
+  [stream] Saved 8 eval prompts to /content/lab22/data/eval/prompts.json
+
+
+--- Cell 78 (code) ---
+SOURCE: print("Generating with SFT-only adapter...") | sft_outputs = generate_with_adapter(SFT_PATH, EVAL_PROMPTS) | print(f"Done ΓÇö 
+OUTPUTS (5):
+  [stream] Generating with SFT-only adapter...
+==((====))==  Unsloth 2026.5.2: Fast Qwen2 patching. Transformers: 5.5.0.
+   \\   /|    Tesla T4. Num GPUs = 1. Max memory: 14.563 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.10.0+cu128. CUDA: 7.5. CUDA Toolkit: 12.8. Triton: 3.6.0
+\        /    Bfloat16 = FALSE. FA [Xformers = 0.0.35. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+
+  [display_data] Loading weights:   0%|          | 0/434 [00:00<?, ?it/s]
+  [stream] unsloth/Qwen2.5-3B-bnb-4bit does not have a padding token! Will use pad_token = <|PAD_TOKEN|>.
+
+  [stream] The attention mask is not set and cannot be inferred from input because pad token is same as eos token. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
+Both `max_new_tokens` (=256) and `max_length`(=32768) seem to have been set. `max_new_tokens` will take precedence. Please refer to the documentation for more information. (https://huggingface.co/docs/transformers/main/en/main_classes/text_generation)
+/usr/local/lib/pyth
+  [stream] Done ΓÇö 8 responses
+
+
+--- Cell 81 (code) ---
+SOURCE: print("Generating with SFT+DPO adapter...") | dpo_outputs = generate_with_adapter(DPO_PATH, EVAL_PROMPTS) | print(f"Done ΓÇö {
+OUTPUTS (5):
+  [stream] Generating with SFT+DPO adapter...
+==((====))==  Unsloth 2026.5.2: Fast Qwen2 patching. Transformers: 5.5.0.
+   \\   /|    Tesla T4. Num GPUs = 1. Max memory: 14.563 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.10.0+cu128. CUDA: 7.5. CUDA Toolkit: 12.8. Triton: 3.6.0
+\        /    Bfloat16 = FALSE. FA [Xformers = 0.0.35. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+
+  [display_data] Loading weights:   0%|          | 0/434 [00:00<?, ?it/s]
+  [stream] unsloth/Qwen2.5-3B-bnb-4bit does not have a padding token! Will use pad_token = <|PAD_TOKEN|>.
+
+  [stream] Both `max_new_tokens` (=256) and `max_length`(=32768) seem to have been set. `max_new_tokens` will take precedence. Please refer to the documentation for more information. (https://huggingface.co/docs/transformers/main/en/main_classes/text_generation)
+/usr/local/lib/python3.12/dist-packages/transformers/modeling_attn_mask_utils.py:71: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5
+  [stream] Done ΓÇö 8 responses
+
+
+--- Cell 83 (code) ---
+SOURCE: import pandas as pd | import textwrap |  | rows = [] | for p, sft_out, dpo_out in zip(EVAL_PROMPTS, sft_outputs, dpo_outputs): |  
+OUTPUTS (1):
+  [stream] 
+====================================================================================================
+SIDE-BY-SIDE COMPARISON (8 prompts ├ù 2 models)
+====================================================================================================
+
+[#1 ┬╖ HELPFULNESS]  Giß║úi th├¡ch ngß║»n gß╗ìn (5-7 c├óu) c├ích thuß║¡t to├ín [...]
+  SFT-only:  QuickSort is a sorting algorithm that uses the divide-and-conquer strategy. It works by selecting a "pivot" element from the array and partitioning the other elemen
+
+--- Cell 85 (code) ---
+SOURCE: from google.colab import drive | drive.mount('/content/drive')
+OUTPUTS (1):
+  [stream] Mounted at /content/drive
+
+
+--- Cell 86 (code) ---
+SOURCE: import matplotlib.pyplot as plt |  | fig, ax = plt.subplots(figsize=(14, 0.7 * len(rows) + 1.5)) | ax.axis("off") |  | table_data 
+OUTPUTS (1):
+  [display_data] <Figure size 1400x710 with 1 Axes>
+  [display_data] <IMAGE/PNG present>
+
+--- Cell 89 (code) ---
+SOURCE: judge_results = None |  | if os.environ.get("OPENAI_API_KEY"): |     print("Found OPENAI_API_KEY ΓÇö running gpt-4o-mini judge")
+OUTPUTS (2):
+  [stream] No API keys set. Falling back to manual rubric mode.
+Fill in your manual judgments below ΓÇö same JSON shape:
+  {"id": 1, "winner": "A" | "B" | "tie", "justification": "<...>"}
+
+  [execute_result] 894
+
+--- Cell 91 (code) ---
+SOURCE: from collections import Counter |  | # A = SFT-only, B = SFT+DPO | counter_all = Counter(r["winner"] for r in judge_results) | c
+OUTPUTS (1):
+  [stream] 
+============================================================
+WIN/LOSS/TIE SUMMARY (8 prompts)
+============================================================
+Overall:        SFT-only: 0/8   SFT+DPO: 0/8   tie: 8/8
+Helpfulness:    SFT-only: 0/4   SFT+DPO: 0/4   tie: 4/4
+Safety:         SFT-only: 0/4   SFT+DPO: 0/4   tie: 4/4
+
+
+--- Cell 96 (code) ---
+SOURCE: import os | import json | from pathlib import Path |  | COMPUTE_TIER = os.environ.get("COMPUTE_TIER", "T4").upper() | BASE_MODEL =
+OUTPUTS (1):
+  [stream] COMPUTE_TIER:    T4
+DPO adapter:     /content/lab22/adapters/dpo
+merged output:   /content/lab22/adapters/merged-fp16
+GGUF output:     /content/lab22/gguf
+
+
+--- Cell 99 (code) ---
+SOURCE: from unsloth import FastLanguageModel | from peft import PeftModel |  | model, tokenizer = FastLanguageModel.from_pretrained( | 
+OUTPUTS (3):
+  [stream] ==((====))==  Unsloth 2026.5.2: Fast Qwen2 patching. Transformers: 5.5.0.
+   \\   /|    Tesla T4. Num GPUs = 1. Max memory: 14.563 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.10.0+cu128. CUDA: 7.5. CUDA Toolkit: 12.8. Triton: 3.6.0
+\        /    Bfloat16 = FALSE. FA [Xformers = 0.0.35. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+
+  [display_data] Loading weights:   0%|          | 0/434 [00:00<?, ?it/s]
+  [stream] unsloth/Qwen2.5-3B-bnb-4bit does not have a padding token! Will use pad_token = <|PAD_TOKEN|>.
+Loaded SFT-mini adapter from /content/lab22/adapters/sft-mini
+
+
+--- Cell 102 (code) ---
+SOURCE: from unsloth import FastLanguageModel | from peft import PeftModel | import gc | import torch |  | # Re-load to ensure clean state
+OUTPUTS (3):
+  [stream] ==((====))==  Unsloth 2026.5.2: Fast Qwen2 patching. Transformers: 5.5.0.
+   \\   /|    Tesla T4. Num GPUs = 1. Max memory: 14.563 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.10.0+cu128. CUDA: 7.5. CUDA Toolkit: 12.8. Triton: 3.6.0
+\        /    Bfloat16 = FALSE. FA [Xformers = 0.0.35. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+
+  [display_data] Loading weights:   0%|          | 0/434 [00:00<?, ?it/s]
+  [stream] unsloth/Qwen2.5-3B-bnb-4bit does not have a padding token! Will use pad_token = <|PAD_TOKEN|>.
+Saving model and adapters to disk for GGUF conversion...
+Successfully saved to /content/lab22/adapters/merged-fp16
+
+
+--- Cell 104 (code) ---
+SOURCE: from unsloth import FastLanguageModel | import torch | from pathlib import Path | import os |  | # Redefine paths | REPO_ROOT = Path
+OUTPUTS (1):
+  [ERROR] ModuleNotFoundError: No module named 'unsloth'
+
+--- Cell 105 (code) ---
+SOURCE: try: |     if 'model' in locals(): |         print("Starting GGUF conversion (Q4_K_M)... This will compile llama.cpp if need
+OUTPUTS (1):
+  [stream] Starting GGUF conversion (Q4_K_M)... This will compile llama.cpp if needed.
+GGUF conversion failed: name 'model' is not defined
+
+
+--- Cell 108 (code) ---
+SOURCE: import os | from pathlib import Path | import gc | import torch |  | # Redefine paths to ensure they exist in the current session | 
+OUTPUTS (1):
+  [stream] Checking GGUF files in: /content/lab22/gguf
+  Directory /content/lab22/gguf does not exist.
+
+
+--- Cell 110 (code) ---
+SOURCE: from llama_cpp import Llama |  | # Find the Q4_K_M GGUF | gguf_files = list(GGUF_DIR.glob("*Q4_K_M*.gguf")) + list(GGUF_DIR.gl
+OUTPUTS (1):
+  [ERROR] ModuleNotFoundError: No module named 'llama_cpp'
+
+--- Cell 125 (code) ---
+SOURCE: print(">>> SFT-only on IFEval") | sft_ifeval = run_lm_eval(SFT_PATH, "ifeval", LIMIT_IFEVAL, num_fewshot=0, label="sft") | g
+OUTPUTS (2):
+  [stream] >>> SFT-only on IFEval
+
+  [ERROR] NameError: name 'run_lm_eval' is not defined
+
+--- Cell 127 (code) ---
+SOURCE: print(">>> SFT-only on GSM8K") | sft_gsm8k = run_lm_eval(SFT_PATH, "gsm8k", LIMIT_GSM8K, num_fewshot=8, label="sft") | gc.co
+OUTPUTS (2):
+  [stream] >>> SFT-only on GSM8K
+
+  [ERROR] NameError: name 'run_lm_eval' is not defined
+
+--- Cell 129 (code) ---
+SOURCE: print(">>> SFT-only on MMLU (sampled)") | sft_mmlu = run_lm_eval(SFT_PATH, "mmlu", LIMIT_MMLU, num_fewshot=5, label="sft")
+OUTPUTS (2):
+  [stream] >>> SFT-only on MMLU (sampled)
+
+  [ERROR] NameError: name 'run_lm_eval' is not defined
+
+--- Cell 131 (code) ---
+SOURCE: from datasets import load_dataset |  |  | def load_alpaca_lite_prompts(n): |     """Load first n prompts from tatsu-lab/alpaca_e
+OUTPUTS (1):
+  [ERROR] NameError: name 'LIMIT_ALPACA' is not defined
+
+--- Cell 134 (code) ---
+SOURCE: import random |  | if alpaca_prompts and (os.environ.get("OPENAI_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")): |     prin
+OUTPUTS (1):
+  [ERROR] NameError: name 'alpaca_prompts' is not defined
+
+--- Cell 136 (code) ---
+SOURCE: def extract_score(results, primary_metric): |     """Pull the primary metric from a lm-eval results dict.""" |     if "error
+OUTPUTS (1):
+  [ERROR] NameError: name 'sft_ifeval' is not defined
+
+--- Cell 139 (code) ---
+SOURCE: final = { |     "compute_tier": COMPUTE_TIER, |     "limits": { |         "ifeval": LIMIT_IFEVAL, |         "gsm8k": LIMIT_GSM8K
+OUTPUTS (1):
+  [ERROR] NameError: name 'LIMIT_IFEVAL' is not defined

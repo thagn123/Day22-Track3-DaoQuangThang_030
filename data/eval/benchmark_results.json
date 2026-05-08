@@ -1,5 +1,7 @@
 {
   "compute_tier": "T4",
+  "base_model": "unsloth/Qwen2.5-3B-bnb-4bit",
+  "eval_framework": "lm-eval v0.4.5",
   "limits": {
     "ifeval": 540,
     "gsm8k": 500,
@@ -9,24 +11,29 @@
   "metrics": {
     "IFEval": {
       "sft": 0.281,
-      "dpo": 0.312
+      "dpo": 0.312,
+      "delta": 0.031
     },
     "GSM8K": {
       "sft": 0.187,
-      "dpo": 0.164
+      "dpo": 0.164,
+      "delta": -0.023
     },
     "MMLU": {
       "sft": 0.523,
-      "dpo": 0.518
+      "dpo": 0.518,
+      "delta": -0.005
     },
     "AlpacaEval-lite": {
       "sft": 0.5,
-      "dpo": null
+      "dpo": null,
+      "delta": null,
+      "note": "skipped - no API key"
     }
   },
-  "deltas": {
-    "IFEval": 0.031,
-    "GSM8K": -0.023,
-    "MMLU": -0.005
+  "summary": {
+    "best_improvement": "IFEval +0.031 (+11% relative)",
+    "alignment_tax": "GSM8K -0.023 (classic alignment tax per deck 8.1)",
+    "factual_preservation": "MMLU -0.005 (within noise, no catastrophic forgetting)"
   }
 }

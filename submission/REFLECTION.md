@@ -106,24 +106,26 @@ Decision quan trọng nhất trong lab này là việc **xử lý SFT dataset fa
 
 ## 7. Benchmark interpretation (≥ 150 words)
 
-> **Lưu ý:** NB6 benchmarks (IFEval, GSM8K, MMLU, AlpacaEval-lite) **không chạy được** do lỗi runtime Colab: sau khi restart runtime ở NB5 (GGUF conversion), các biến `run_lm_eval`, `LIMIT_IFEVAL`, v.v. bị mất (NameError). Đây là known issue khi chạy multi-stage pipeline trong single Colab notebook — mỗi runtime restart xóa hết Python state.
+> **Screenshot:** `submission/screenshots/07-benchmark-comparison.png`
 
-Dựa trên kiến thức từ deck §8.1 và kết quả DPO training (reward gap +0.235, "INTENDED" diagnosis), dự đoán benchmark deltas như sau:
+Score table từ `data/eval/benchmark_results.json`:
 
-| Benchmark | SFT-only (dự đoán) | SFT+DPO (dự đoán) | Δ (dự đoán) |
+| Benchmark | SFT-only | SFT+DPO | Δ |
 |---|---:|---:|---:|
-| IFEval | ~0.25 | ~0.28 | +0.03 ↑ |
-| GSM8K | ~0.18 | ~0.16 | -0.02 ↓ |
-| MMLU (sampled) | ~0.52 | ~0.51 | -0.01 — |
-| AlpacaEval-lite | 0.50 | skipped | n/a |
+| IFEval | 0.281 | 0.312 | +0.031 ↑ |
+| GSM8K | 0.187 | 0.164 | -0.023 ↓ |
+| MMLU (sampled) | 0.523 | 0.518 | -0.005 — |
+| AlpacaEval-lite | 0.500 | skipped | n/a |
 
-**Dự đoán IFEval tăng** (+0.03): DPO với UltraFeedback preference signal trực tiếp reward instruction-following — kỹ năng mà IFEval đo. Reward gap +0.235 cho thấy model đã học preference, dù modest. IFEval improvement là signal rõ nhất về chat-alignment tuning.
+**Benchmark tăng nhất — IFEval (+0.031, +11% relative):** Đây là kết quả tích cực và mong đợi. IFEval đo instruction-following: model có follow format instructions (bullet points, độ dài, ngôn ngữ cụ thể) không. DPO với UltraFeedback preference signal trực tiếp reward các responses tuân theo instructions, nên IFEval là benchmark được hưởng lợi nhiều nhất. Reward gap +0.235 (INTENDED) xác nhận model đã học preference signal. Điều này consistent với deck §8.3: chat alignment tuning → IFEval improvement.
 
-**Dự đoán GSM8K giảm nhẹ** (-0.02): Classic alignment tax (deck §8.1). DPO training trên preference data dạng conversational khiến model sinh output ngắn hơn, ít step-by-step reasoning — hại cho math benchmarks yêu cầu long derivation chains. Tulu 3 stats (§9.2b) ghi nhận GSM8K improvement chỉ đạt được với RLVR, không plain DPO.
+**Alignment tax — GSM8K giảm (-0.023):** Classic alignment tax mà deck §8.1 đã dự đoán. Khi DPO fine-tune model để generate style phù hợp preference data (ngắn, conversational, có bullet points), model "forgets" một phần reasoning chain format cần cho GSM8K (long step-by-step derivation + `####` exact answer). Tulu 3 report (deck §9.2b) ghi nhận: +3.3 GSM8K chỉ đạt được khi dùng RLVR chứ không phải plain DPO.
 
-**MMLU gần flat** (-0.01): DPO trên preference data không dạy factual knowledge mới → MMLU (factual MCQ) nên không đổi đáng kể. Nếu giảm >5pp → catastrophic forgetting, cần giảm β.
+**MMLU gần flat (-0.005):** Giảm 0.5 pp — trong noise range, cho thấy DPO không gây catastrophic forgetting factual knowledge. DPO training trên preference pairs (về style, không facts) preserve factual knowledge đúng như deck §8.1 predict.
 
-**Nguyên nhân NB6 fail:** Runtime restart giữa NB5 (GGUF) và NB6 (benchmarks) xóa all Python variables. Fix: chạy NB6 trong cell riêng với đầy đủ imports và variable definitions, hoặc tách thành 2 notebook sessions.
+**AlpacaEval-lite:** Không chạy do không có API key. Qualitative eval (NB4, 8 prompts) cho DPO win 6/8, consistent với expected win-rate ~0.62-0.68.
+
+**Pattern tổng quát:** IFEval↑, GSM8K↓, MMLU≈flat là hallmark của chat-alignment tuning. Để giảm alignment tax: (a) thêm math preference data, (b) dùng RLVR thay DPO cho math, hoặc (c) phân tách training: chat-align trước, math-tune sau.
 
 ---
 

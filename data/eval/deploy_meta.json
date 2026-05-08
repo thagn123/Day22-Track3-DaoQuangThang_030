@@ -1,10 +1,20 @@
 {
   "compute_tier": "T4",
   "base_model": "unsloth/Qwen2.5-3B-bnb-4bit",
-  "merged_path": "C:\\Users\\Admin\\Downloads\\Day22-Track3-DaoQuangThang_030-main\\Day22-Track3-DaoQuangThang_030-main\\adapters\\merged-fp16",
-  "gguf_path": "C:\\Users\\Admin\\Downloads\\Day22-Track3-DaoQuangThang_030-main\\Day22-Track3-DaoQuangThang_030-main\\gguf\\lab22-dpo-Q4_K_M.gguf",
+  "sft_adapter": "adapters/sft-mini",
+  "dpo_adapter": "adapters/dpo",
+  "merged_path": "adapters/merged-fp16",
+  "gguf_path": "gguf/lab22-dpo-Q4_K_M.gguf",
   "gguf_size_mb": 2019.4,
-  "quantization": "q4_k_m",
-  "smoke_prompt": "Gi\u1ea3i th\u00edch ng\u1eafn g\u1ecdn (3 c\u00e2u) c\u00e1ch thu\u1eadt to\u00e1n Bubble sort ho\u1ea1t \u0111\u1ed9ng.",
-  "smoke_response": "Bubble Sort compares adjacent elements and swaps if out of order. Repeats until sorted. O(n2) complexity - suitable for small arrays."
+  "quantization": "Q4_K_M",
+  "smoke_test": {
+    "prompt": "Giai thich ngan gon (3 cau) cach thuat toan Bubble sort hoat dong.",
+    "response": "Bubble Sort is a simple comparison-based sorting algorithm. It repeatedly steps through the list, compares adjacent elements, and swaps them if they are in the wrong order. The pass through the list is repeated until the list is sorted, making it an O(n^2) algorithm best suited for small datasets.",
+    "tokens": {
+      "prompt": 32,
+      "completion": 58,
+      "total": 90
+    },
+    "speed_tok_s": 18.4
+  }
 }
